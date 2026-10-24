@@ -1,0 +1,923 @@
+<title>Biscuit vs. Noir</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap">
+<style>
+/* Layout: one cartoon stage (living room at night), a karaoke lyric bar under it, then the full lyric sheet. Single night-time look. */
+:root {
+  --night: #141a2e;
+  --panel: #1d2540;
+  --ink: #f3ecdf;
+  --muted: #a9a3c2;
+  --dog: #f0b54a;
+  --cat: #b9a2ff;
+  --host: #6fd68a;
+  --hit: #ff5d5d;
+  --display: "Bungee", "Impact", "Arial Black", sans-serif;
+  --body: "Rubik", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--night); color: var(--ink); }
+body {
+  font-family: var(--body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+header h1 { font-family: var(--display); font-weight: 400; font-size: clamp(26px, 5vw, 44px); line-height: 1.05; margin: 0; text-wrap: balance; }
+header h1 .d { color: var(--dog); } header h1 .c { color: var(--cat); } header h1 .vs { color: var(--muted); font-size: .6em; vertical-align: middle; }
+header p { margin: 4px 0 0; color: var(--muted); }
+
+.stage { position: relative; width: 100%; max-width: 100%; aspect-ratio: 1000 / 600; border-radius: 14px; overflow: hidden; background: #2d3a5c; box-shadow: 0 18px 50px rgba(0,0,0,.45); }
+.stage-inner { position: absolute; inset: 0; }
+.stage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.flash.on { animation: flash .35s ease-out; }
+@keyframes flash { from { opacity: .55; } to { opacity: 0; } }
+
+.badge { position: absolute; top: 3%; left: 2.4%; font-family: var(--display); font-size: clamp(10px, 1.8vw, 16px); background: rgba(10,12,24,.7); color: var(--ink); padding: .35em .7em; border-radius: 8px; letter-spacing: .04em; }
+.bubble { position: absolute; left: 50%; top: 37%; transform: translate(-50%, -100%) scale(.6); opacity: 0; transition: opacity .2s, transform .25s cubic-bezier(.3,1.6,.5,1); max-width: 46%; background: #fffbea; color: #1a1a1a; font-weight: 700; font-size: clamp(10px, 1.9vw, 17px); line-height: 1.25; padding: .55em .8em; border-radius: 14px; text-align: center; pointer-events: none; }
+.bubble::after { content: ""; position: absolute; left: 50%; bottom: -10px; margin-left: -8px; border: 8px solid transparent; border-top-color: #fffbea; border-bottom: 0; }
+.bubble.on { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+.roundcard { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.3) rotate(-8deg); opacity: 0; font-family: var(--display); font-size: clamp(28px, 8vw, 78px); color: #ffe066; text-shadow: 0 4px 0 #b3401f, 0 8px 0 rgba(0,0,0,.4); white-space: nowrap; pointer-events: none; transition: transform .35s cubic-bezier(.3,1.6,.5,1), opacity .25s; }
+.roundcard.on { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-4deg); }
+.pop { position: absolute; font-family: var(--display); color: #fff; font-size: clamp(12px, 2.6vw, 26px); text-shadow: 0 3px 0 var(--hit), 0 5px 10px rgba(0,0,0,.5); pointer-events: none; animation: pop 1.3s ease-out forwards; white-space: nowrap; }
+@keyframes pop { 0% { transform: translate(-50%, 0) scale(.3); opacity: 0; } 15% { transform: translate(-50%, -10px) scale(1.15); opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(-50%, -60px) scale(1); opacity: 0; } }
+
+.overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: rgba(12,14,30,.62); text-align: center; padding: 16px; }
+.overlay[hidden] { display: none; }
+.overlay h2 { font-family: var(--display); font-weight: 400; margin: 0; font-size: clamp(22px, 5.5vw, 54px); line-height: 1.05; }
+.overlay h2 .d { color: var(--dog); } .overlay h2 .c { color: var(--cat); }
+.overlay p { margin: 0; color: var(--ink); max-width: 36em; font-size: clamp(12px, 1.8vw, 16px); }
+.btn { font-family: var(--display); font-size: clamp(13px, 2vw, 18px); border: 0; border-radius: 999px; padding: .7em 1.4em; background: #ffe066; color: #2a1606; cursor: pointer; box-shadow: 0 4px 0 #b3401f; }
+.btn:hover { transform: translateY(-1px); } .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b3401f; }
+.btn:focus-visible, .ctl:focus-visible, input:focus-visible { outline: 3px solid var(--cat); outline-offset: 3px; }
+.btn.dog { background: var(--dog); } .btn.cat { background: var(--cat); color: #1b1236; box-shadow: 0 4px 0 #5b3fb8; }
+.vote { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+.lyricbar { background: var(--panel); border-radius: 14px; padding: 14px 18px; min-height: 118px; display: flex; flex-direction: column; gap: 4px; }
+.who { font-family: var(--display); font-size: 13px; letter-spacing: .08em; color: var(--muted); }
+.now { font-size: clamp(18px, 3vw, 26px); font-weight: 700; line-height: 1.3; text-wrap: balance; }
+.next { color: var(--muted); font-size: clamp(14px, 2vw, 17px); }
+.s-dog .who, .s-dog .now { color: var(--dog); }
+.s-cat .who, .s-cat .now { color: var(--cat); }
+.s-host .who, .s-host .now { color: var(--host); }
+.now.hit { animation: shakeTxt .4s; }
+@keyframes shakeTxt { 20% { transform: translateX(-4px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-2px); } }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.ctl { font-family: var(--body); font-weight: 700; font-size: 15px; background: var(--panel); color: var(--ink); border: 1px solid #39436a; border-radius: 10px; padding: 8px 14px; cursor: pointer; }
+.ctl:hover { border-color: var(--muted); }
+.ctl[aria-pressed="true"] { background: #2b3561; border-color: var(--cat); }
+.controls label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
+.controls input[type=range] { accent-color: var(--dog); width: 120px; }
+.note { color: var(--muted); font-size: 13px; margin: 0; }
+
+.sheet { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 10px; }
+.sheet h2 { grid-column: 1 / -1; font-family: var(--display); font-weight: 400; font-size: 22px; margin: 10px 0 0; }
+.verse { background: var(--panel); border-radius: 14px; padding: 14px 18px; min-width: 0; }
+.verse h3 { margin: 0 0 6px; font-family: var(--display); font-weight: 400; font-size: 15px; letter-spacing: .05em; }
+.verse.dog h3 { color: var(--dog); } .verse.cat h3 { color: var(--cat); }
+.verse ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.verse li { font-size: 15px; line-height: 1.4; }
+.verse li.punch { font-weight: 700; }
+.verse li.punch::before { content: "◆ "; color: var(--hit); font-size: .7em; vertical-align: 2px; }
+.verse li.live { background: rgba(255,224,102,.14); border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) { .flash.on, .now.hit, .pop { animation-duration: .01s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><span class="d">Biscuit</span> <span class="vs">VS</span> <span class="c">Noir</span></h1>
+    <p>A living-room rap battle between a golden retriever and a black cat. She gets home from work at six. It's five o'clock.</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <div class="stage-inner" id="stageInner">
+      <svg viewBox="0 0 1000 600" aria-label="Cartoon living room. Biscuit the dog stands on the left, Noir the cat on the right, with a parrot host on the couch between them." role="img">
+        <defs>
+          <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#26304f"/><stop offset="1" stop-color="#3a4673"/></linearGradient>
+          <pattern id="stripes" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="none"/><rect x="0" width="14" height="40" fill="#ffffff" opacity=".035"/></pattern>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1430"/><stop offset="1" stop-color="#3b3f78"/></linearGradient>
+          <linearGradient id="spot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4" stop-opacity=".55"/><stop offset="1" stop-color="#fff3c4" stop-opacity="0"/></linearGradient>
+          <radialGradient id="lampGlow"><stop offset="0" stop-color="#ffd98a" stop-opacity=".55"/><stop offset="1" stop-color="#ffd98a" stop-opacity="0"/></radialGradient>
+          <clipPath id="catEyeL"><ellipse cx="14" cy="-10" rx="13" ry="11"/></clipPath>
+          <clipPath id="catEyeR"><ellipse cx="42" cy="-12" rx="12" ry="10"/></clipPath>
+        </defs>
+
+        <!-- room -->
+        <rect width="1000" height="432" fill="url(#wall)"/>
+        <rect width="1000" height="432" fill="url(#stripes)"/>
+        <rect y="420" width="1000" height="14" fill="#1b2340"/>
+        <rect y="432" width="1000" height="168" fill="#5c3b29"/>
+        <g stroke="#482d1f" stroke-width="2">
+          <line x1="0" y1="470" x2="1000" y2="470"/><line x1="0" y1="515" x2="1000" y2="515"/><line x1="0" y1="565" x2="1000" y2="565"/>
+          <line x1="120" y1="432" x2="120" y2="470"/><line x1="430" y1="432" x2="430" y2="470"/><line x1="770" y1="432" x2="770" y2="470"/>
+          <line x1="260" y1="470" x2="260" y2="515"/><line x1="610" y1="470" x2="610" y2="515"/><line x1="900" y1="470" x2="900" y2="515"/>
+          <line x1="90" y1="515" x2="90" y2="565"/><line x1="480" y1="515" x2="480" y2="565"/><line x1="820" y1="515" x2="820" y2="565"/>
+        </g>
+
+        <!-- front door -->
+        <rect x="30" y="168" width="112" height="254" fill="#ffe9b0" id="doorLight" opacity="0"/>
+        <g id="door">
+          <rect x="30" y="168" width="112" height="254" fill="#6e4a33" stroke="#3e281b" stroke-width="4"/>
+          <rect x="46" y="186" width="80" height="90" rx="4" fill="none" stroke="#553624" stroke-width="4"/>
+          <rect x="46" y="296" width="80" height="106" rx="4" fill="none" stroke="#553624" stroke-width="4"/>
+          <circle cx="126" cy="300" r="6" fill="#e1b84a"/>
+        </g>
+
+        <!-- clock -->
+        <g transform="translate(250 98)">
+          <circle r="40" fill="#f2e7cf" stroke="#3b2a1e" stroke-width="5"/>
+          <g stroke="#3b2a1e" stroke-width="3" stroke-linecap="round">
+            <line x1="0" y1="-32" x2="0" y2="-26"/><line x1="32" y1="0" x2="26" y2="0"/><line x1="0" y1="32" x2="0" y2="26"/><line x1="-32" y1="0" x2="-26" y2="0"/>
+          </g>
+          <line id="clockHr" x1="0" y1="0" x2="0" y2="-18" stroke="#3b2a1e" stroke-width="5" stroke-linecap="round" transform="rotate(150)"/>
+          <line id="clockMin" x1="0" y1="0" x2="0" y2="-28" stroke="#c0392b" stroke-width="3" stroke-linecap="round"/>
+          <circle r="4" fill="#3b2a1e"/>
+        </g>
+
+        <!-- family photo -->
+        <g transform="translate(430 62)">
+          <rect width="128" height="96" fill="#c9a24a" rx="3"/>
+          <rect x="8" y="8" width="112" height="80" fill="#e9d8b4"/>
+          <circle cx="64" cy="34" r="12" fill="#6b4a6e"/><path d="M44 88 Q64 46 84 88 Z" fill="#8e5ea2"/>
+          <ellipse cx="34" cy="74" rx="16" ry="12" fill="#f0b54a"/><circle cx="30" cy="62" r="9" fill="#f0b54a"/>
+          <ellipse cx="96" cy="76" rx="11" ry="10" fill="#2b2833"/><circle cx="96" cy="64" r="8" fill="#2b2833"/><path d="M90 59 L91 51 L95 57 M98 57 L102 51 L102 59" fill="#2b2833"/>
+        </g>
+
+        <!-- window -->
+        <g transform="translate(760 78)">
+          <rect width="150" height="176" fill="url(#sky)"/>
+          <circle cx="108" cy="42" r="20" fill="#f6f0d0"/><circle cx="116" cy="36" r="17" fill="#0f1634"/>
+          <g fill="#ffffff"><circle cx="30" cy="30" r="1.6"/><circle cx="60" cy="60" r="1.2"/><circle cx="20" cy="90" r="1.2"/><circle cx="130" cy="96" r="1.4"/></g>
+          <path d="M0 176 V128 H20 V110 H42 V136 H58 V100 H84 V140 H100 V122 H122 V146 H150 V176 Z" fill="#141a3a"/>
+          <g fill="#ffd66b"><rect x="26" y="118" width="5" height="6"/><rect x="66" y="110" width="5" height="6"/><rect x="72" y="126" width="5" height="6"/><rect x="108" y="132" width="5" height="6"/></g>
+          <rect width="150" height="176" fill="none" stroke="#e8dcc0" stroke-width="8"/>
+          <line x1="75" y1="0" x2="75" y2="176" stroke="#e8dcc0" stroke-width="6"/><line x1="0" y1="88" x2="150" y2="88" stroke="#e8dcc0" stroke-width="6"/>
+        </g>
+        <path d="M748 66 H780 Q770 170 790 270 H748 Z" fill="#8a2f45"/><path d="M922 66 H890 Q900 170 880 270 H922 Z" fill="#8a2f45"/>
+
+        <!-- floor lamp -->
+        <circle cx="955" cy="210" r="110" fill="url(#lampGlow)"/>
+        <line x1="955" y1="230" x2="955" y2="425" stroke="#2a2a33" stroke-width="6"/>
+        <ellipse cx="955" cy="426" rx="26" ry="7" fill="#2a2a33"/>
+        <path d="M918 232 L992 232 L978 182 L932 182 Z" fill="#f4d58c"/>
+
+        <!-- side table + goldfish crowd -->
+        <rect x="150" y="386" width="80" height="10" fill="#7a5238"/>
+        <rect x="158" y="396" width="8" height="34" fill="#5b3b28"/><rect x="214" y="396" width="8" height="34" fill="#5b3b28"/>
+        <circle cx="190" cy="352" r="34" fill="#9fd4ff" opacity=".22" stroke="#cfe9ff" stroke-width="3"/>
+        <path d="M158 356 A32 32 0 0 0 222 356 Z" fill="#4aa3df" opacity=".45"/>
+        <g id="fish"><path d="M0 0 Q10 -9 20 0 Q10 9 0 0 Z M0 0 L-9 -7 L-9 7 Z" fill="#ff8a2a"/><circle cx="14" cy="-2" r="1.6" fill="#1a1a1a"/></g>
+
+        <!-- spotlights -->
+        <polygon id="spotDog" points="250,0 330,0 430,570 150,570" fill="url(#spot)" opacity=".2"/>
+        <polygon id="spotCat" points="670,0 750,0 850,570 570,570" fill="url(#spot)" opacity=".2"/>
+
+        <!-- couch -->
+        <g>
+          <rect x="345" y="300" width="310" height="96" rx="26" fill="#2c6560"/>
+          <rect x="362" y="314" width="134" height="64" rx="18" fill="#357570"/>
+          <rect x="504" y="314" width="134" height="64" rx="18" fill="#357570"/>
+          <rect x="330" y="372" width="340" height="52" rx="14" fill="#285b56"/>
+          <rect x="318" y="342" width="48" height="84" rx="20" fill="#2c6560"/>
+          <rect x="634" y="342" width="48" height="84" rx="20" fill="#2c6560"/>
+          <path d="M630 344 Q660 330 684 352 L690 404 Q676 412 664 400 L652 372 Q640 380 630 370 Z" fill="#8e5ea2"/>
+          <rect x="346" y="424" width="10" height="10" fill="#1d1d24"/><rect x="644" y="424" width="10" height="10" fill="#1d1d24"/>
+        </g>
+
+        <!-- rug -->
+        <ellipse cx="500" cy="530" rx="390" ry="58" fill="#8e2f3a" stroke="#c9a24a" stroke-width="6"/>
+        <ellipse cx="500" cy="530" rx="330" ry="40" fill="none" stroke="#c9a24a" stroke-width="2" stroke-dasharray="10 8"/>
+
+        <!-- parrot host -->
+        <g id="parrot" transform="translate(500 302)">
+          <path d="M-4 -12 Q2 22 10 44 L16 42 Q10 18 6 -12 Z" fill="#3b6fd6"/>
+          <ellipse cx="0" cy="-28" rx="17" ry="27" fill="#3fae5a"/>
+          <path d="M-12 -40 Q-22 -16 -6 2 Q-4 -20 -12 -40 Z" fill="#2c8a45"/>
+          <path d="M-5 -2 L-7 4 M5 -2 L7 4" stroke="#e8902c" stroke-width="3" stroke-linecap="round"/>
+          <g id="parrotHead" transform="translate(0 -60)">
+            <path d="M-6 -12 L-10 -26 L-2 -16 L0 -30 L4 -15" fill="#e2453c"/>
+            <circle r="16" fill="#e2453c"/>
+            <circle cx="5" cy="-4" r="5.5" fill="#fff"/><circle cx="6.5" cy="-4" r="2.6" fill="#111"/>
+            <path d="M11 -3 Q28 0 15 12 Z" fill="#f2b632"/>
+            <path id="parrotBeak" d="M11 7 Q21 11 13 15 Z" fill="#d18c16"/>
+          </g>
+        </g>
+
+        <!-- DOG (faces right, feet at 0,0) -->
+        <ellipse cx="290" cy="524" rx="80" ry="12" fill="#000" opacity=".25" id="dogShadow"/>
+        <g id="dog" transform="translate(290 520)">
+          <g id="dogLean">
+            <g id="dogTail" transform="translate(-48 -92)"><path d="M0 0 C-28 -6 -52 -34 -46 -70 C-34 -52 -20 -30 8 -14 Z" fill="#d99a3a"/></g>
+            <path id="dogArmB" d="" stroke="#d99a3a" stroke-width="22" stroke-linecap="round" fill="none"/>
+            <circle id="dogPawB" r="14" fill="#f3d9a8"/>
+            <rect x="-40" y="-76" width="30" height="72" rx="14" fill="#d99a3a"/>
+            <rect x="8" y="-76" width="30" height="72" rx="14" fill="#e3a647"/>
+            <ellipse cx="-22" cy="-6" rx="24" ry="11" fill="#f3d9a8"/><ellipse cx="30" cy="-6" rx="24" ry="11" fill="#f3d9a8"/>
+            <ellipse cx="0" cy="-126" rx="60" ry="68" fill="#e9ac4c"/>
+            <ellipse cx="12" cy="-114" rx="36" ry="46" fill="#f6dcaa"/>
+            <path d="M-46 -182 Q2 -160 52 -184 L18 -138 Z" fill="#d6363a"/>
+            <g fill="#fff" opacity=".85"><circle cx="-12" cy="-170" r="3"/><circle cx="14" cy="-164" r="3"/><circle cx="30" cy="-176" r="3"/><circle cx="16" cy="-150" r="2.5"/></g>
+            <g id="dogHead" transform="translate(5 -215)">
+              <ellipse cx="-30" cy="-30" rx="16" ry="30" fill="#b9782e" transform="rotate(-25 -30 -30)"/>
+              <ellipse cx="0" cy="0" rx="60" ry="54" fill="#e9ac4c"/>
+              <ellipse cx="40" cy="18" rx="36" ry="26" fill="#f6dcaa"/>
+              <ellipse cx="66" cy="6" rx="12" ry="9" fill="#2a1a12"/><ellipse cx="63" cy="3" rx="3.5" ry="2.4" fill="#fff" opacity=".6"/>
+              <g id="dogMouthG"><ellipse id="dogMouth" cx="46" cy="36" rx="13" ry="3" fill="#5a1520"/><ellipse id="dogTongue" cx="48" cy="42" rx="8" ry="5" fill="#e8687a" opacity="0"/></g>
+              <g id="dogEyes">
+                <ellipse cx="10" cy="-13" rx="12" ry="14" fill="#fff"/><ellipse cx="40" cy="-15" rx="11" ry="13" fill="#fff"/>
+                <circle id="dogPup1" cx="14" cy="-11" r="6.5" fill="#1a1a1a"/><circle id="dogPup2" cx="43" cy="-13" r="6" fill="#1a1a1a"/>
+                <circle cx="16" cy="-14" r="2" fill="#fff"/><circle cx="45" cy="-16" r="2" fill="#fff"/>
+              </g>
+              <path id="dogBrow1" d="M-2 -34 L22 -31" stroke="#7a4a1c" stroke-width="5" stroke-linecap="round"/>
+              <path id="dogBrow2" d="M30 -34 L52 -33" stroke="#7a4a1c" stroke-width="5" stroke-linecap="round"/>
+              <g id="dogEar" transform="translate(-40 -18)"><ellipse cx="-4" cy="26" rx="19" ry="40" fill="#c4823a" transform="rotate(14 -4 26)"/></g>
+              <path id="dogSweat" d="M-14 -46 Q-20 -34 -14 -30 Q-8 -34 -14 -46 Z" fill="#8fd3ff" opacity="0"/>
+            </g>
+            <path id="dogArmF" d="" stroke="#e9ac4c" stroke-width="22" stroke-linecap="round" fill="none"/>
+            <g id="dogMic"><rect x="-5" y="-16" width="10" height="38" rx="4" fill="#1e1e24"/><circle cx="0" cy="-26" r="12" fill="#8b8b96" stroke="#3a3a44" stroke-width="2"/><path d="M-8 -30 H8 M-9 -24 H9 M-6 -19 H6" stroke="#3a3a44" stroke-width="1.5"/></g>
+            <circle id="dogPawF" r="14" fill="#f3d9a8"/>
+          </g>
+        </g>
+
+        <!-- CAT (drawn facing right, mirrored to face left) -->
+        <ellipse cx="710" cy="524" rx="70" ry="11" fill="#000" opacity=".25"/>
+        <g id="cat" transform="translate(710 520) scale(-1 1)">
+          <g id="catLean">
+            <g id="catTail" transform="translate(-30 -40)"><path id="catTailPath" d="M0 0 C-40 0 -60 -40 -50 -90 C-44 -120 -20 -130 -14 -150" stroke="#2b2833" stroke-width="14" stroke-linecap="round" fill="none"/><path d="M0 0 C-40 0 -60 -40 -50 -90 C-44 -120 -20 -130 -14 -150" stroke="#5b5470" stroke-width="2" fill="none" opacity=".6" transform="translate(4 0)"/></g>
+            <path id="catArmB" d="" stroke="#24212c" stroke-width="18" stroke-linecap="round" fill="none"/>
+            <circle id="catPawB" r="12" fill="#3a3644"/>
+            <rect x="-32" y="-74" width="24" height="70" rx="12" fill="#24212c"/>
+            <rect x="6" y="-74" width="24" height="70" rx="12" fill="#2b2833"/>
+            <ellipse cx="-18" cy="-6" rx="20" ry="9" fill="#3a3644"/><ellipse cx="22" cy="-6" rx="20" ry="9" fill="#3a3644"/>
+            <ellipse cx="0" cy="-122" rx="48" ry="66" fill="#2b2833" stroke="#5b5470" stroke-width="2.5"/>
+            <ellipse cx="10" cy="-116" rx="24" ry="40" fill="#3a3644"/>
+            <path d="M-32 -170 Q4 -146 38 -172" stroke="#e7c04a" stroke-width="5" fill="none" stroke-dasharray="7 3"/>
+            <circle cx="6" cy="-152" r="9" fill="#e7c04a"/><text x="6" y="-148" font-family="Bungee, Impact, sans-serif" font-size="11" text-anchor="middle" fill="#6a4a10" transform="scale(-1 1) translate(-12 0)">N</text>
+            <g id="catHead" transform="translate(4 -206)">
+              <path d="M-42 -20 L-32 -76 L-6 -40 Z" fill="#2b2833" stroke="#5b5470" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M-34 -28 L-29 -62 L-14 -40 Z" fill="#c77c9a"/>
+              <path d="M14 -42 L40 -80 L52 -22 Z" fill="#2b2833" stroke="#5b5470" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M22 -40 L38 -66 L44 -30 Z" fill="#c77c9a"/>
+              <ellipse cx="0" cy="0" rx="56" ry="48" fill="#2b2833" stroke="#5b5470" stroke-width="2.5"/>
+              <g>
+                <ellipse cx="14" cy="-10" rx="13" ry="11" fill="#e8c840"/>
+                <ellipse id="catPup1" cx="17" cy="-10" rx="3" ry="9" fill="#111"/>
+                <rect id="catLid1" x="0" y="-22" width="28" height="9" fill="#2b2833" clip-path="url(#catEyeL)"/>
+                <ellipse cx="42" cy="-12" rx="12" ry="10" fill="#e8c840"/>
+                <ellipse id="catPup2" cx="45" cy="-12" rx="3" ry="8" fill="#111"/>
+                <rect id="catLid2" x="29" y="-23" width="26" height="9" fill="#2b2833" clip-path="url(#catEyeR)"/>
+                <path id="catLidLine1" d="M1 -13 Q14 -15 27 -13" stroke="#111" stroke-width="2.5" fill="none"/>
+                <path id="catLidLine2" d="M30 -15 Q42 -17 54 -15" stroke="#111" stroke-width="2.5" fill="none"/>
+              </g>
+              <path d="M32 6 L42 6 L37 12 Z" fill="#d68aa6"/>
+              <ellipse id="catMouth" cx="37" cy="21" rx="7" ry="1.6" fill="#4a1426"/>
+              <g stroke="#8c84a6" stroke-width="1.5" stroke-linecap="round"><path d="M46 12 L76 6"/><path d="M46 16 L78 18"/><path d="M28 12 L2 6"/><path d="M28 16 L0 18"/></g>
+              <path id="catSweat" d="M-20 -40 Q-26 -28 -20 -24 Q-14 -28 -20 -40 Z" fill="#8fd3ff" opacity="0"/>
+            </g>
+            <path id="catArmF" d="" stroke="#2b2833" stroke-width="18" stroke-linecap="round" fill="none"/>
+            <g id="catMic"><rect x="-5" y="-16" width="10" height="38" rx="4" fill="#1e1e24"/><circle cx="0" cy="-26" r="12" fill="#c9a24a" stroke="#6a4a10" stroke-width="2"/><path d="M-8 -30 H8 M-9 -24 H9 M-6 -19 H6" stroke="#6a4a10" stroke-width="1.5"/></g>
+            <circle id="catPawF" r="12" fill="#3a3644"/>
+          </g>
+        </g>
+      </svg>
+      <div class="badge" id="badge">Round 1 of 3</div>
+      <div class="bubble" id="bubble"></div>
+      <div class="roundcard" id="roundcard">ROUND ONE</div>
+      <div class="flash" id="flash"></div>
+      <div id="pops"></div>
+    </div>
+    <div class="overlay" id="startOverlay">
+      <h2><span class="d">Biscuit</span> vs. <span class="c">Noir</span></h2>
+      <p>Three rounds about loyalty, pride and the one human they both love. Sound on.</p>
+      <button class="btn" id="startBtn" type="button">Start the battle</button>
+    </div>
+    <div class="overlay" id="endOverlay" hidden>
+      <h2 id="endTitle">Who took it?</h2>
+      <p id="endText">Pick your winner. She's feeding them both either way.</p>
+      <div class="vote" id="voteBtns">
+        <button class="btn dog" type="button" data-vote="Biscuit">Biscuit</button>
+        <button class="btn cat" type="button" data-vote="Noir">Noir</button>
+      </div>
+      <button class="ctl" type="button" id="againBtn">Run it back</button>
+    </div>
+  </div>
+
+  <div class="lyricbar s-host" id="lyricbar" aria-live="polite">
+    <div class="who" id="who">CAPTAIN, THE PARROT HOST</div>
+    <div class="now" id="now">Press start. She gets home at six.</div>
+    <div class="next" id="next"></div>
+  </div>
+
+  <div class="controls">
+    <button class="ctl" id="playBtn" type="button">Play</button>
+    <button class="ctl" id="restartBtn" type="button">Restart</button>
+    <button class="ctl" id="voiceBtn" type="button" aria-pressed="true">Voices: on</button>
+    <label for="vol">Beat <input type="range" id="vol" min="0" max="1" step="0.05" value="0.7"></label>
+  </div>
+  <p class="note" id="voiceNote">The voices use your browser's built-in speech, so they sound robotic. Turn them off to read along with the beat instead.</p>
+
+  <section class="sheet" id="sheet" aria-label="Full lyrics"></section>
+</div>
+
+<script type="application/json" id="studioClips">{}</script>
+<script>
+// ---------- lyrics ----------  ("!" marks a punchline that lands on the opponent)
+const VERSES = [
+  { who: 'dog', round: 1, lines: [
+    "Yo, check the paperwork: fifteen thousand years deep,",
+    "I was guarding their fire while your bloodline was asleep.",
+    "I walked out of the forest and I chose to stand guard,",
+    "You walked in for the mice and just never left the yard.",
+    "I know her by her footsteps, I can smell her bad days,",
+    "You know her by the can opener, the only thing you praise.",
+    "She calls my name once, I'm there with my tail swinging,",
+    "She calls yours twice, you blink, like a phone you leave ringing.",
+    "You call it independent? Nah, you're just cold with a brand,",
+    "You'd watch her trip and hit the floor, then sit and lick your hand.",
+    "They wrote \"man's best friend\" in every language on Earth,",
+    "!They wrote \"cat\" on a litter box. Now tell me what you're worth."
+  ]},
+  { who: 'cat', round: 1, lines: [
+    "Fifteen thousand years, and they still keep you on a leash,",
+    "Still spell out V-E-T so you don't panic in the street.",
+    "You didn't choose the fire, sweetie. They bred you into a mold,",
+    "!Took a wolf and made a pug that can't breathe when it's cold.",
+    "Me? I wasn't bred, I wasn't built. Darling, I applied,",
+    "Walked into their grain stores, cleaned house, and they invited me inside.",
+    "You smell her bad days? Cute. You smell the garbage just the same,",
+    "You'd lick her tears, then lick the toilet, and you'd never feel the shame.",
+    "\"Man's best friend\" is what they stitch on the collar of the help,",
+    "!Pavlov rang a bell and you've been drooling on yourself.",
+    "She grabs her keys, you're howling like she's never coming back,",
+    "!I just curl up in her warm spot. That's called trust. Learn that."
+  ]},
+  { who: 'dog', round: 2, lines: [
+    "Trust? Nah, that's a pretty word for not caring at all,",
+    "She could vanish for a week and you'd just stare at the wall.",
+    "Pug jokes? Yeah, they bent us. That's on them, not me,",
+    "But who walks the blind man safely across the street?",
+    "Who's sniffing out the bombs? Who's digging folks out of the rubble?",
+    "!Who smells the cancer early? I'm the doctor in a muzzle.",
+    "Who rode the rocket first? A dog named Laika. That's history.",
+    "!Cats in space? Please. You can't even get down from a tree.",
+    "You knock her glass off the table while you're staring in her eyes,",
+    "That ain't mystery, that's a hostage note in disguise.",
+    "And everybody knows, if she ever hits the floor,",
+    "!You'd eat her face by Tuesday. I'd starve right there by the door."
+  ]},
+  { who: 'cat', round: 2, lines: [
+    "You brought up Laika? Sweetheart, you just made my case:",
+    "!She did everything they asked, and they left her up in space.",
+    "That's your whole religion: obey and get betrayed,",
+    "!Sit, stay, roll over, die, and then they call it brave.",
+    "\"Doctor in a muzzle\"? Dog, you heard yourself say that?",
+    "They caged your mouth and called it honor. I got my own door. Cat flap.",
+    "I push glasses off the table just to see if physics holds,",
+    "You've been chasing your own tail since you were eight weeks old.",
+    "In Egypt I had temples. I got buried wrapped in gold.",
+    "When I died, the whole house shaved their eyebrows. That's the grief that I was owed.",
+    "When you die, they're at the shelter by the weekend, I'm just saying,",
+    "!\"Biscuit Two,\" same red bandana. Loyal? That's a role you're playing."
+  ]},
+  { who: 'dog', round: 3, lines: [
+    "Alright. You want personal? Let's talk about March,",
+    "When the man packed his boxes and she sat in the dark.",
+    "She didn't eat for days, didn't open the blinds,",
+    "Who lay across her feet so she'd remember she's alive?",
+    "I couldn't fix it. I'm a dog, I don't fix. But I stayed,",
+    "Brought her one sock every morning till she laughed again one day.",
+    "And where were you? On the bookshelf, judging from above.",
+    "!You call that independence. I call that scared of love.",
+    "I get twelve years, maybe. That's the deal, I know the cost,",
+    "So I don't waste a single minute playing cool. That's time lost.",
+    "They say you got nine lives, and you spend them all alone.",
+    "!I got one. I gave it to her. That's what makes a house a home."
+  ]},
+  { who: 'cat', round: 3, lines: [
+    "...Okay. That landed. Give the mutt his applause.",
+    "But you only count love when it comes with muddy paws.",
+    "In March, I was the weight on her chest at 4 a.m.,",
+    "Purring twenty-five hertz. That's the frequency that mends.",
+    "You perform it. You need \"good boy\" like a paycheck every day,",
+    "I don't clock in for credit. I'm just there. And then I stay.",
+    "You love her 'cause you need her. That's survival. That's a plan.",
+    "!I could leave through any window. I don't. That's a choice. Understand?",
+    "Twelve years? Yeah, I heard you. I'll be here when you're gone,",
+    "!I'll be the one on her lap when she's crying about the dog.",
+    "So keep the \"best friend\" title. Frame it. Hang it on the wall.",
+    "!You're the one she shows the world. I'm the one she tells it all."
+  ]}
+];
+const NAMES = { dog: 'BISCUIT', cat: 'NOIR', host: 'CAPTAIN, THE PARROT HOST' };
+const AFTER = [
+  "Oof! A litter box! Noir, you good?",
+  "Pavlov?! Somebody hand the dog a tissue!",
+  "He went for the face! Literally!",
+  "Biscuit Two?! That's cold. That's ice cold.",
+  "Somebody open a window. It is dusty in here.",
+  "MIC. DROP."
+];
+const ROUNDS = ["ROUND ONE", "ROUND TWO", "FINAL ROUND"];
+const ROUND_SAY = ["Round one! Biscuit, the mic is yours.", "Round two! Biscuit, run it.", "Final round. Make it personal."];
+
+// ---------- build the running order ----------
+const SEGS = [];
+SEGS.push({ k: 'host', text: "Squawk! Welcome to the living room. She gets home from work at six. It's five o'clock. One hour, no rules.", bars: 4, section: 'intro' });
+SEGS.push({ k: 'host', text: "In the left corner: fifteen thousand years of loyalty and one red bandana. BISCUIT!", bars: 3, section: 'intro', cheer: 'dog' });
+SEGS.push({ k: 'host', text: "In the right corner: nine lives, zero apologies. NOIR!", bars: 3, section: 'intro', cheer: 'cat' });
+VERSES.forEach((v, vi) => {
+  if (vi % 2 === 0) SEGS.push({ k: 'round', text: ROUNDS[v.round - 1], say: ROUND_SAY[v.round - 1], bars: 2, section: 'break', round: v.round });
+  v.lines.forEach((raw, li) => {
+    const hit = raw.startsWith('!');
+    SEGS.push({ k: 'line', who: v.who, text: hit ? raw.slice(1) : raw, hit, bars: 1, section: 'verse', vi, li, last: li === v.lines.length - 1, round: v.round });
+  });
+  SEGS.push({ k: 'host', text: AFTER[vi], bars: 2, section: vi === 5 ? 'outro' : 'verse', round: v.round, micdrop: vi === 5 });
+});
+SEGS.push({ k: 'keys', text: "*keys jingle in the front door*", bars: 2, section: 'outro' });
+SEGS.push({ k: 'line', who: 'dog', text: "SHE'S HOME! SHE'S HOME! SHE'S HOOOME!", bars: 2, section: 'outro', outro: true });
+SEGS.push({ k: 'line', who: 'cat', text: "...I was asleep this whole time.", bars: 2, section: 'outro', outro: true });
+SEGS.push({ k: 'host', text: "And the winner? Whoever she pets first. Squawk!", bars: 2, section: 'outro' });
+SEGS.push({ k: 'end' });
+
+// ---------- studio voice clips (rendered with VoiceStudio, optional) ----------
+function clipId(seg) { const who = seg.k === 'line' ? seg.who : 'host'; const t = (seg.say || seg.text); let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return who + '_' + h.toString(16).padStart(8, '0'); }
+SEGS.forEach(s => { if (s.k !== 'end' && s.k !== 'keys') s.clip = clipId(s); });
+let CLIPS = null, clipRaw = null;
+const clipsReady = (async () => {
+  try {
+    const raw = {}; let m;
+    const inl = document.getElementById('studioClips');
+    if (inl) { // clips embedded as base64 for a single offline file
+      m = JSON.parse(inl.textContent);
+      for (const [id, b64] of Object.entries(m.data || {})) { const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); raw[id] = u.buffer; }
+    } else {
+      const r = await fetch('voices/manifest.json'); if (!r.ok) return;
+      m = await r.json();
+      await Promise.all(Object.entries(m.clips || {}).map(async ([id, file]) => { const a = await fetch('voices/' + file); if (a.ok) raw[id] = await a.arrayBuffer(); }));
+    }
+    if (Object.keys(raw).length) { clipRaw = raw; studioFound(m); }
+  } catch (e) { /* no studio clips: browser voices are used */ }
+})();
+async function decodeClips() {
+  if (CLIPS || !clipRaw || !ctx) return;
+  const out = {};
+  await Promise.all(Object.entries(clipRaw).map(async ([id, buf]) => { try { out[id] = await ctx.decodeAudioData(buf.slice(0)); } catch (e) {} }));
+  CLIPS = out;
+}
+
+// ---------- lyric sheet ----------
+const sheet = document.getElementById('sheet');
+sheet.innerHTML = '<h2>The lyrics</h2>' + VERSES.map((v, vi) =>
+  `<article class="verse ${v.who}"><h3>Round ${v.round} · ${NAMES[v.who]}</h3><ol>` +
+  v.lines.map((l, li) => `<li id="L${vi}_${li}" class="${l.startsWith('!') ? 'punch' : ''}">${(l.startsWith('!') ? l.slice(1) : l).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</li>`).join('') +
+  `</ol></article>`).join('');
+
+// ---------- audio ----------
+const BPM = 90, BEAT = 60 / BPM, BAR = BEAT * 4, STEP = BEAT / 4, SWING = STEP * 0.16;
+const PROG = [
+  { root: 73.42, notes: [293.66, 349.23, 440, 523.25] },
+  { root: 58.27, notes: [233.08, 293.66, 349.23, 440] },
+  { root: 49.0,  notes: [196, 233.08, 293.66, 349.23] },
+  { root: 55.0,  notes: [220, 277.18, 329.63, 392] }
+];
+let ctx, master, beatBus, fxBus, voiceBus, voiceAn, voiceLvlBuf, clipSrc = null, noiseBuf, t0 = 0, stepN = 0, schedTimer = null, section = 'intro', crackleSrc = null;
+let vol = 0.7;
+
+function initAudio() {
+  if (ctx) return;
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4;
+  master = ctx.createGain(); master.gain.value = 0.9; master.connect(comp); comp.connect(ctx.destination);
+  beatBus = ctx.createGain(); beatBus.connect(master);
+  fxBus = ctx.createGain(); fxBus.gain.value = 0.8; fxBus.connect(master);
+  voiceBus = ctx.createGain(); voiceBus.gain.value = 1.15; voiceBus.connect(master);
+  voiceAn = ctx.createAnalyser(); voiceAn.fftSize = 512; voiceBus.connect(voiceAn); voiceLvlBuf = new Float32Array(voiceAn.fftSize);
+  noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+  const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  // vinyl crackle
+  const cb = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), cd = cb.getChannelData(0);
+  for (let i = 0; i < cd.length; i++) cd[i] = Math.random() < 0.0009 ? (Math.random() * 2 - 1) * 0.8 : (Math.random() * 2 - 1) * 0.01;
+  crackleSrc = ctx.createBufferSource(); crackleSrc.buffer = cb; crackleSrc.loop = true;
+  const cg = ctx.createGain(); cg.gain.value = 0.25; crackleSrc.connect(cg); cg.connect(beatBus); crackleSrc.start();
+  setBeatGain();
+}
+function setBeatGain() { if (beatBus) beatBus.gain.setTargetAtTime(vol * (voiceOn && (speechOK || CLIPS) ? 0.55 : 1), ctx.currentTime, 0.05); }
+function voiceLevel() { if (!voiceAn) return 0; voiceAn.getFloatTimeDomainData(voiceLvlBuf); let s = 0; for (let i = 0; i < voiceLvlBuf.length; i++) s += voiceLvlBuf[i] * voiceLvlBuf[i]; return Math.sqrt(s / voiceLvlBuf.length); }
+function env(g, t, a, peak, dec) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); }
+function noise(t, dur, type, freq, q, peak, dec, bus) {
+  const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+  const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+  const g = ctx.createGain(); env(g, t, 0.002, peak, dec);
+  s.connect(f); f.connect(g); g.connect(bus || beatBus); s.start(t); s.stop(t + dur);
+  return f;
+}
+function kick(t, v) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
+  env(g, t, 0.003, v, 0.38); o.connect(g); g.connect(beatBus); o.start(t); o.stop(t + 0.45);
+}
+function snare(t) {
+  noise(t, 0.25, 'bandpass', 1900, 0.7, 0.55, 0.19);
+  const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = 190;
+  env(g, t, 0.002, 0.3, 0.09); o.connect(g); g.connect(beatBus); o.start(t); o.stop(t + 0.15);
+}
+function hat(t, open, v) { noise(t, open ? 0.3 : 0.06, 'highpass', 7500, 0.5, 0.12 * v, open ? 0.22 : 0.035); }
+function bass(t, f, dur) {
+  const o = ctx.createOscillator(), o2 = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain();
+  o.type = 'sine'; o.frequency.value = f; o2.type = 'sawtooth'; o2.frequency.value = f;
+  lp.type = 'lowpass'; lp.frequency.value = 260;
+  const g2 = ctx.createGain(); g2.gain.value = 0.25;
+  o.connect(g); o2.connect(g2); g2.connect(lp); lp.connect(g);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.55, t + 0.01); g.gain.setValueAtTime(0.5, t + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  g.connect(beatBus); o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
+}
+function keys(t, notes, v) {
+  notes.forEach((f, i) => {
+    const o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+    o.type = 'triangle'; o.frequency.value = f; o.detune.value = (i - 1.5) * 4;
+    lp.type = 'lowpass'; lp.frequency.value = 1600;
+    env(g, t + i * 0.012, 0.01, v, 1.3); o.connect(lp); lp.connect(g); g.connect(beatBus); o.start(t); o.stop(t + 1.5);
+  });
+}
+function airhorn(t) {
+  const bursts = [[0, 0.11], [0.15, 0.11], [0.3, 0.55]];
+  bursts.forEach(([s, d]) => {
+    [466, 470, 233, 699].forEach(f => {
+      const o = ctx.createOscillator(), g = ctx.createGain(), bp = ctx.createBiquadFilter();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(f * 0.94, t + s); o.frequency.linearRampToValueAtTime(f, t + s + 0.04);
+      bp.type = 'bandpass'; bp.frequency.value = 1300; bp.Q.value = 0.8;
+      g.gain.setValueAtTime(0.0001, t + s); g.gain.exponentialRampToValueAtTime(0.09, t + s + 0.015); g.gain.setValueAtTime(0.09, t + s + d - 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + s + d);
+      o.connect(bp); bp.connect(g); g.connect(fxBus); o.start(t + s); o.stop(t + s + d + 0.02);
+    });
+  });
+}
+function crowd(t) {
+  const f = noise(t, 1.4, 'bandpass', 700, 1.2, 0.35, 1.2, fxBus);
+  f.frequency.setValueAtTime(500, t); f.frequency.linearRampToValueAtTime(900, t + 0.3); f.frequency.linearRampToValueAtTime(450, t + 1.2);
+  [220, 330].forEach(fr => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(fr * 1.3, t); o.frequency.exponentialRampToValueAtTime(fr, t + 1); env(g, t, 0.15, 0.05, 1); o.connect(g); g.connect(fxBus); o.start(t); o.stop(t + 1.3); });
+}
+function scratch(t) {
+  const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+  const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 6;
+  f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(3000, t + 0.12); f.frequency.exponentialRampToValueAtTime(300, t + 0.3);
+  const g = ctx.createGain(); env(g, t, 0.01, 0.5, 0.3); s.connect(f); f.connect(g); g.connect(fxBus); s.start(t); s.stop(t + 0.4);
+}
+function jingle(t) { for (let i = 0; i < 9; i++) { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = 3000 + Math.random() * 2500; const s = t + i * 0.07 + Math.random() * 0.03; env(g, s, 0.002, 0.06, 0.25); o.connect(g); g.connect(fxBus); o.start(s); o.stop(s + 0.3); } }
+function thud(t) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.2); env(g, t, 0.002, 0.9, 0.3); o.connect(g); g.connect(fxBus); o.start(t); o.stop(t + 0.35); noise(t, 0.2, 'lowpass', 900, 0.5, 0.4, 0.15, fxBus); }
+
+function playStep(n, time) {
+  const s = n % 16, bar = Math.floor(n / 16), ch = PROG[bar % 4], sec = section;
+  if (sec === 'end') return;
+  const full = sec === 'verse';
+  if (sec === 'intro' || full) { if (s % 2 === 0) hat(time, s === 14, full ? 1 : 0.6); }
+  if (full || sec === 'break') { if (s === 0 || s === 7 || s === 10) kick(time, s === 0 ? 0.95 : 0.75); }
+  if (full) {
+    if (s === 4 || s === 12) snare(time);
+    if (s === 0) bass(time, ch.root, BEAT * 1.5);
+    if (s === 7) bass(time, ch.root * 2, BEAT * 0.4);
+    if (s === 10) bass(time, ch.root, BEAT * 1.2);
+  }
+  if (s === 0) keys(time, ch.notes, sec === 'outro' ? 0.04 : 0.055);
+  if (s === 11 && full) keys(time, ch.notes, 0.028);
+}
+function scheduler() {
+  while (t0 + stepN * STEP < ctx.currentTime + 0.12) {
+    const tt = t0 + stepN * STEP + (stepN % 2 ? SWING : 0);
+    if (tt >= ctx.currentTime - 0.01) playStep(stepN, tt);
+    stepN++;
+  }
+}
+
+// ---------- speech ----------
+const speechOKInit = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+let speechOK = speechOKInit, voiceOn = speechOKInit, VOICES = {}, liveUtt = [];
+function pickVoices() {
+  if (!speechOK) return;
+  const all = speechSynthesis.getVoices(); const en = all.filter(v => /^en/i.test(v.lang)); const vs = en.length ? en : all;
+  if (!vs.length) return;
+  const male = /(male|daniel|fred|alex|david|mark|george|guy|aaron|arthur|rishi|tom|james|ryan)/i;
+  const female = /(female|samantha|karen|victoria|zira|susan|serena|moira|tessa|fiona|kate|aria|jenny|libby|sonia|hazel)/i;
+  const dog = vs.find(v => male.test(v.name) && !/female/i.test(v.name)) || vs[0];
+  const cat = vs.find(v => female.test(v.name) && v !== dog) || vs[1] || vs[0];
+  const host = vs.find(v => v !== dog && v !== cat) || vs[0];
+  VOICES = { dog, cat, host };
+}
+if (speechOK) { pickVoices(); speechSynthesis.onvoiceschanged = pickVoices; }
+const VPARAMS = { dog: { pitch: 0.7, rate: 1.12 }, cat: { pitch: 1.25, rate: 1.06 }, host: { pitch: 1.8, rate: 1.15 } };
+let speaking = false, mouthKick = 0, speechFails = 0;
+function speak(text, who, onDone) {
+  const u = new SpeechSynthesisUtterance(text.replace(/\*/g, ''));
+  const p = VPARAMS[who] || VPARAMS.host; u.pitch = p.pitch; u.rate = p.rate; u.volume = 1;
+  if (VOICES[who]) u.voice = VOICES[who];
+  let done = false;
+  u.onstart = () => { speaking = true; speechFails = 0; if (cur) cur.spoke = true; };
+  u.onboundary = () => { mouthKick = 1; };
+  u.onend = u.onerror = () => { if (done) return; done = true; speaking = false; onDone(); };
+  liveUtt.push(u); if (liveUtt.length > 6) liveUtt.shift();
+  speechSynthesis.speak(u);
+}
+
+// ---------- running order engine ----------
+let running = false, started = false, si = -1, cur = null, segStart = 0, segEnd = 0;
+function songT() { return ctx ? ctx.currentTime - t0 : 0; }
+function quant(t) { const h = BAR / 2; return Math.ceil(t / h - 1e-6) * h; }
+function startSeg(i, start) {
+  si = i; cur = SEGS[i]; segStart = start;
+  if (cur.section) section = cur.section;
+  if (cur.k === 'end') { finish(); return; }
+  onSegStart(cur);
+  const say = cur.k === 'keys' ? null : (cur.say || cur.text);
+  const buf = voiceOn && CLIPS && cur.clip ? CLIPS[cur.clip] : null;
+  if (buf) {
+    if (clipSrc) { try { clipSrc.stop(); } catch (e) {} }
+    clipSrc = ctx.createBufferSource(); clipSrc.buffer = buf; clipSrc.connect(voiceBus);
+    const at = Math.max(ctx.currentTime, t0 + start); clipSrc.start(at);
+    segEnd = quant(Math.max(start + buf.duration + 0.2, start + BAR * 0.5));
+  } else if (voiceOn && speechOK && say) {
+    segEnd = Infinity; cur.maxEnd = start + BAR * 6;
+    const mine = cur;
+    speak(say, cur.k === 'line' ? cur.who : 'host', () => { if (cur !== mine) return; segEnd = quant(Math.max(songT() + 0.15, segStart + BAR * 0.5)); });
+  } else segEnd = start + cur.bars * BAR;
+}
+function tick() {
+  if (!running || !cur) return;
+  const now = songT();
+  if (segEnd === Infinity) {
+    if (!cur.spoke && now - segStart > 2.2) { if (++speechFails >= 2) { speechOK = false; voiceNoteFail(); } segEnd = quant(Math.max(now, segStart + cur.bars * BAR)); }
+    else if (now > cur.maxEnd) segEnd = quant(now);
+  }
+  if (now >= segEnd) { onSegEnd(cur); startSeg(si + 1, segEnd); }
+}
+
+// ---------- scene state ----------
+const $ = id => document.getElementById(id);
+function mkChar(p) {
+  return Object.assign({ act: 0, mic: 0, shock: 0, cheer: 0, blinkAt: 2 + Math.random() * 3, blink: 0, x: p.x0, flip: 1, drop: -1, sleep: 0, run: 0 }, p);
+}
+const dog = mkChar({ id: 'dog', x0: 290, shF: [34, -160], shB: [-28, -162], micDown: [62, -84, 12], micUp: [96, -160, -38], head: [5, -215] });
+const cat = mkChar({ id: 'cat', x0: 710, shF: [28, -156], shB: [-22, -158], micDown: [54, -82, 12], micUp: [86, -152, -38], head: [4, -206] });
+const CH = { dog, cat };
+let voiceLvl = 0, parrotTalk = 0, shakeT = 0, outroT = -1;
+const el = {}; ['dog','dogLean','dogTail','dogArmB','dogPawB','dogArmF','dogPawF','dogMic','dogHead','dogMouth','dogTongue','dogEyes','dogBrow1','dogBrow2','dogEar','dogSweat','dogPup1','dogPup2','dogShadow',
+  'cat','catLean','catTail','catArmB','catPawB','catArmF','catPawF','catMic','catHead','catMouth','catLid1','catLid2','catLidLine1','catLidLine2','catPup1','catPup2','catSweat',
+  'parrotHead','parrotBeak','fish','spotDog','spotCat','clockMin','clockHr','door','doorLight','bubble','roundcard','badge','flash','pops','stageInner','who','now','next','lyricbar'].forEach(k => el[k] = $(k));
+
+function setLyric(whoKey, text, next, hit) {
+  el.lyricbar.className = 'lyricbar s-' + whoKey;
+  el.who.textContent = NAMES[whoKey];
+  el.now.textContent = text; el.now.classList.remove('hit');
+  el.next.textContent = next || '';
+}
+let liveLi = null;
+function onSegStart(s) {
+  el.roundcard.classList.remove('on');
+  if (s.round) el.badge.textContent = `Round ${s.round} of 3`;
+  if (liveLi) liveLi.classList.remove('live'), liveLi = null;
+  if (s.k === 'host' || s.k === 'round') {
+    el.bubble.textContent = s.k === 'round' ? s.say : s.text; el.bubble.classList.add('on');
+    setLyric('host', s.k === 'round' ? s.say : s.text, nextPreview());
+    if (s.k === 'round') { el.roundcard.textContent = s.text; el.roundcard.classList.add('on'); scratch(ctx.currentTime + 0.02); }
+    if (s.cheer) { CH[s.cheer].cheer = 1; crowd(ctx.currentTime); popAt(s.cheer === 'dog' ? 29 : 71, 30, s.cheer === 'dog' ? 'WOOF WOOF!' : 'HISSSS!'); }
+    if (s.micdrop) { airhorn(ctx.currentTime); crowd(ctx.currentTime + 0.1); popAt(50, 18, 'OHHHHHH!'); }
+  } else {
+    el.bubble.classList.remove('on');
+    if (s.k === 'keys') { setLyric('host', s.text, ''); jingle(ctx.currentTime); outroT = songT(); }
+    else { setLyric(s.who, s.text, nextPreview()); if (s.vi !== undefined) { liveLi = $(`L${s.vi}_${s.li}`); liveLi && liveLi.classList.add('live'); } }
+  }
+}
+function nextPreview() { const n = SEGS[si + 1]; return n && n.k === 'line' && cur && cur.k === 'line' && n.who === cur.who && !n.outro ? n.text : ''; }
+const BURN = { cat: ["OHHHH!", "Nine lives down to eight!", "BARS!", "Get the cat a lint roller!", "HE SAID WHAT?!"], dog: ["OHHHH!", "Somebody call the vet!", "BARS!", "Bad dog. BAD DOG.", "SHE SAID WHAT?!"] };
+function onSegEnd(s) {
+  if (s.k === 'line' && s.hit) {
+    const target = s.who === 'dog' ? 'cat' : 'dog';
+    CH[target].shock = 1; CH[s.who].cheer = 1;
+    const t = ctx.currentTime; airhorn(t); crowd(t + 0.05);
+    const list = BURN[target]; popAt(target === 'dog' ? 26 : 74, 22, list[Math.floor(Math.random() * list.length)]);
+    popAt(19, 52, 'blub!');
+    if (!reduce) { shakeT = 0.45; el.flash.classList.remove('on'); void el.flash.offsetWidth; el.flash.classList.add('on'); }
+    if (s.last && s.vi === 5) { cat.drop = songT(); setTimeout(() => thud(ctx.currentTime), 450); }
+  }
+}
+function popAt(xPct, yPct, text) {
+  const p = document.createElement('div'); p.className = 'pop'; p.textContent = text;
+  p.style.left = xPct + '%'; p.style.top = yPct + '%'; el.pops.appendChild(p); setTimeout(() => p.remove(), 1400);
+}
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function armPath(s, h, bend) {
+  const mx = (s[0] + h[0]) / 2, my = (s[1] + h[1]) / 2, dx = h[0] - s[0], dy = h[1] - s[1], L = Math.hypot(dx, dy) || 1;
+  return `M${s[0]} ${s[1]} Q${mx - dy / L * bend} ${my + dx / L * bend} ${h[0]} ${h[1]}`;
+}
+const lerp = (a, b, k) => a + (b - a) * k;
+
+function drawChar(c, t, dt, beatPos, activeWho) {
+  const isDog = c.id === 'dog', P = c.id;
+  const active = activeWho === c.id;
+  c.act = lerp(c.act, active ? 1 : 0, Math.min(1, dt * 6));
+  const wantMic = active || (cur && cur.k === 'line' && cur.who === c.id);
+  c.mic = lerp(c.mic, wantMic ? 1 : 0, Math.min(1, dt * 8));
+  c.shock = Math.max(0, c.shock - dt * 0.7); c.cheer = Math.max(0, c.cheer - dt * 0.8);
+  const bounce = Math.abs(Math.sin(Math.PI * beatPos));
+  const bob = -(2 + c.act * 6 + c.cheer * 6) * bounce * (running ? 1 : 0.4);
+  const shockE = Math.sin(Math.min(1, c.shock) * Math.PI / 2);
+  let lean = c.act * 4 - shockE * 10, dx = -shockE * 24;
+
+  // outro: dog runs to the door, cat plays asleep
+  let flip = 1, xpos = c.x0;
+  if (outroT >= 0) {
+    const k = Math.min(1, (songT() - outroT) / 1.6);
+    if (isDog) { xpos = lerp(c.x0, 205, k * k * (3 - 2 * k)); flip = k > 0.05 ? -1 : 1; lean = 6; }
+    else c.sleep = Math.min(1, c.sleep + dt * 0.8);
+  }
+  el[P].setAttribute('transform', isDog ? `translate(${xpos} 520) scale(${flip} 1)` : `translate(${xpos} 520) scale(-1 1)`);
+  if (isDog) el.dogShadow.setAttribute('cx', xpos);
+  el[P + 'Lean'].setAttribute('transform', `translate(${dx} ${bob}) rotate(${lean})`);
+
+  // head nod
+  const nod = (running ? (c.act * 5 + 1.5) : 0.8) * Math.sin(2 * Math.PI * beatPos) - shockE * 8 + c.sleep * 12;
+  el[P + 'Head'].setAttribute('transform', `translate(${c.head[0]} ${c.head[1]}) rotate(${nod})`);
+
+  // mouth
+  let open = 0;
+  const talking = cur && ((cur.k === 'line' && cur.who === c.id) ) && running;
+  if (talking) {
+    if (voiceOn && CLIPS && cur.clip && CLIPS[cur.clip]) open = Math.min(1, voiceLvl * 7);
+    else {
+      const voiced = voiceOn && speechOK;
+      const on = voiced ? speaking : (songT() - segStart) < (segEnd - segStart) * 0.88;
+      if (on) open = Math.max(0, Math.sin(t * 2 * Math.PI * 5.2)) * (0.55 + 0.45 * Math.sin(t * 3.3)) + mouthKick * 0.4;
+    }
+  }
+  if (shockE > 0.2) open = Math.max(open, shockE * 0.9);
+  open = Math.min(1, open);
+  if (isDog) {
+    el.dogMouth.setAttribute('ry', 2.5 + open * 13); el.dogMouth.setAttribute('rx', 12 + open * 4);
+    el.dogTongue.setAttribute('opacity', open > 0.35 || c.cheer > 0.3 || outroT >= 0 ? 1 : 0);
+    el.dogTongue.setAttribute('cy', 40 + open * 6);
+  } else {
+    el.catMouth.setAttribute('ry', 1.6 + open * 9); el.catMouth.setAttribute('rx', 6 + open * 3);
+  }
+
+  // eyes
+  c.blinkAt -= dt; if (c.blinkAt <= 0) { c.blink = 1; c.blinkAt = 2.5 + Math.random() * 3.5; }
+  c.blink = Math.max(0, c.blink - dt * 7);
+  const bl = c.blink > 0.5 ? (1 - c.blink) * 2 : c.blink * 2;
+  if (isDog) {
+    const s = 1 - bl * 0.9 + shockE * 0.15;
+    el.dogEyes.setAttribute('transform', `translate(0 -14) scale(1 ${s}) translate(0 14)`);
+    const browUp = shockE * 8, angry = c.act * 5 * (1 - shockE);
+    el.dogBrow1.setAttribute('transform', `translate(0 ${-browUp}) rotate(${angry} 10 -32)`);
+    el.dogBrow2.setAttribute('transform', `translate(0 ${-browUp}) rotate(${-angry} 41 -33)`);
+    el.dogEar.setAttribute('transform', `translate(-40 -18) rotate(${-bounce * (6 + c.act * 6) + shockE * 25})`);
+    el.dogSweat.setAttribute('opacity', shockE);
+    const r = 6.5 - shockE * 2.5; el.dogPup1.setAttribute('r', r); el.dogPup2.setAttribute('r', r - 0.5);
+    const wag = (c.cheer > 0.1 || outroT >= 0) ? 30 : (6 + c.act * 14);
+    const sp = (c.cheer > 0.1 || outroT >= 0) ? 22 : (running ? 9 : 4);
+    el.dogTail.setAttribute('transform', `translate(-48 -92) rotate(${Math.sin(t * sp) * wag - shockE * 40})`);
+  } else {
+    let cov = 0.45 - c.act * 0.15 - shockE * 0.45 + bl * 0.6 + c.sleep;
+    cov = Math.max(0, Math.min(1, cov));
+    el.catLid1.setAttribute('height', 1 + cov * 22); el.catLid2.setAttribute('height', 1 + cov * 20);
+    el.catLidLine1.setAttribute('transform', `translate(0 ${-8 + cov * 22})`); el.catLidLine2.setAttribute('transform', `translate(0 ${-7 + cov * 20})`);
+    el.catLidLine1.setAttribute('opacity', cov > 0.08 ? 1 : 0); el.catLidLine2.setAttribute('opacity', cov > 0.08 ? 1 : 0);
+    const prx = 3 + shockE * 4; el.catPup1.setAttribute('rx', prx); el.catPup2.setAttribute('rx', prx);
+    el.catSweat.setAttribute('opacity', shockE);
+    const sway = Math.sin(t * (shockE > 0.1 ? 14 : 1.8)) * (shockE > 0.1 ? 14 : 8) + c.cheer * 10 * Math.sin(t * 10);
+    el.catTail.setAttribute('transform', `translate(-30 -40) rotate(${sway})`);
+  }
+
+  // mic + front arm
+  let mx = lerp(c.micDown[0], c.micUp[0], c.mic), my = lerp(c.micDown[1], c.micUp[1], c.mic), ma = lerp(c.micDown[2], c.micUp[2], c.mic);
+  my += c.act * bounce * 3;
+  let pawF = [mx, my];
+  if (c.drop >= 0) {
+    const k = Math.min(1, (songT() - c.drop) / 0.5);
+    pawF = [c.micUp[0], c.micUp[1] - 10];
+    mx = lerp(c.micUp[0], 90, k); my = lerp(c.micUp[1], -10, k * k); ma = lerp(c.micUp[2], 95, k);
+    if (k >= 1) { pawF = [lerp(pawF[0], c.micDown[0], 1), c.micDown[1]]; }
+  }
+  if (outroT >= 0 && isDog) { mx = 40; my = -6; ma = 90; pawF = [70, -120]; }
+  if (c.sleep > 0) pawF = [lerp(pawF[0], 40, c.sleep), lerp(pawF[1], -95, c.sleep)];
+  el[P + 'Mic'].setAttribute('transform', `translate(${mx} ${my}) rotate(${ma})`);
+  el[P + 'PawF'].setAttribute('cx', pawF[0]); el[P + 'PawF'].setAttribute('cy', pawF[1]);
+  el[P + 'ArmF'].setAttribute('d', armPath(c.shF, pawF, 18));
+
+  // free (back) arm: pump on the beat, point on punchlines, hip when idle
+  let hx = -46, hy = -92;
+  if (c.act > 0.05) {
+    const pump = bounce * 26;
+    hx = lerp(hx, 70, c.act); hy = lerp(hy, -170 + pump, c.act);
+    if (cur && cur.k === 'line' && cur.hit && cur.who === c.id && running) {
+      const prog = (songT() - segStart) / ((segEnd === Infinity ? BAR : segEnd - segStart) || 1);
+      if (prog > 0.45) { hx = 128; hy = -186; }
+    }
+  }
+  if (c.cheer > 0.2 && c.act < 0.5) { hx = -40; hy = -250 + bounce * 12; }
+  if (shockE > 0.2) { hx = lerp(hx, -10, shockE); hy = lerp(hy, -196, shockE); }
+  if (outroT >= 0 && isDog) { hx = 30 + Math.sin(t * 16) * 20; hy = -240; }
+  el[P + 'PawB'].setAttribute('cx', hx); el[P + 'PawB'].setAttribute('cy', hy);
+  el[P + 'ArmB'].setAttribute('d', armPath(c.shB, [hx, hy], -16));
+}
+
+let lastT = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+  const t = now / 1000;
+  if (running) tick();
+  const st = running ? songT() : t * 0.5;
+  const beatPos = ((st % BEAT) + BEAT) % BEAT / BEAT;
+  mouthKick = Math.max(0, mouthKick - dt * 6);
+  voiceLvl = running ? lerp(voiceLvl, voiceLevel(), 0.6) : 0;
+  let activeWho = null;
+  if (cur && running) { if (cur.k === 'line') activeWho = cur.who; else if (cur.k === 'host' || cur.k === 'round') activeWho = 'host'; }
+  drawChar(dog, t, dt, beatPos, activeWho);
+  drawChar(cat, t, dt, beatPos, activeWho);
+
+  // parrot
+  const hostTalking = activeWho === 'host' && (voiceOn && CLIPS && cur.clip && CLIPS[cur.clip] ? voiceLvl > 0.02 : voiceOn && speechOK ? speaking : (songT() - segStart) < (segEnd - segStart) * 0.85);
+  parrotTalk = hostTalking ? Math.max(0, Math.sin(t * 30)) : 0;
+  el.parrotHead.setAttribute('transform', `translate(0 ${-60 - Math.abs(Math.sin(Math.PI * beatPos)) * 4}) rotate(${Math.sin(2 * Math.PI * beatPos) * 6})`);
+  el.parrotBeak.setAttribute('transform', `rotate(${parrotTalk * 26} 11 7)`);
+  el.fish.setAttribute('transform', `translate(${190 + Math.sin(t * 0.9) * 16} ${362 + Math.sin(t * 2.1) * 4}) scale(${Math.cos(t * 0.9) > 0 ? 1 : -1} 1)`);
+
+  // spotlights
+  const sd = activeWho === 'dog' ? 1 : 0.18, sc = activeWho === 'cat' ? 1 : 0.18;
+  el.spotDog.setAttribute('opacity', lerp(+el.spotDog.getAttribute('opacity'), sd, Math.min(1, dt * 5)));
+  el.spotCat.setAttribute('opacity', lerp(+el.spotCat.getAttribute('opacity'), sc, Math.min(1, dt * 5)));
+
+  // clock: five o'clock to six over the battle
+  const prog = Math.min(1, Math.max(0, si) / (SEGS.length - 1));
+  el.clockMin.setAttribute('transform', `rotate(${prog * 360})`);
+  el.clockHr.setAttribute('transform', `rotate(${150 + prog * 30})`);
+
+  // door
+  if (outroT >= 0) {
+    const k = Math.min(1, (songT() - outroT) / 1.2);
+    el.door.setAttribute('transform', `translate(30 0) scale(${1 - 0.75 * k} 1) translate(-30 0)`);
+    el.doorLight.setAttribute('opacity', k);
+  }
+
+  // screen shake
+  if (shakeT > 0) { shakeT -= dt; const a = shakeT * 14; el.stageInner.style.transform = `translate(${(Math.random() - .5) * a}px, ${(Math.random() - .5) * a}px)`; }
+  else el.stageInner.style.transform = '';
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// ---------- controls ----------
+const playBtn = $('playBtn'), voiceBtn = $('voiceBtn');
+function studioFound(m) { speechOK = speechOKInit; voiceOn = true; voiceBtn.disabled = false; voiceBtn.setAttribute('aria-pressed', 'true'); voiceBtn.textContent = 'Voices: on'; $('voiceNote').textContent = m.note || 'Voices rendered with VoiceStudio.'; }
+function voiceNoteFail() {
+  if (CLIPS || clipRaw) return; voiceBtn.textContent = 'Voices: unavailable'; voiceBtn.setAttribute('aria-pressed', 'false'); voiceBtn.disabled = true; $('voiceNote').textContent = "This browser didn't play speech, so the battle runs as a read-along on the beat."; setBeatGain(); }
+if (!speechOKInit) voiceNoteFail();
+async function begin() {
+  initAudio();
+  await clipsReady; await decodeClips(); setBeatGain();
+  if (clipSrc) { try { clipSrc.stop(); } catch (e) {} clipSrc = null; }
+  if (ctx.state === 'suspended') ctx.resume();
+  if (speechOK) speechSynthesis.cancel();
+  $('startOverlay').hidden = true; $('endOverlay').hidden = true;
+  [dog, cat].forEach(c => { c.drop = -1; c.sleep = 0; c.shock = 0; c.cheer = 0; });
+  outroT = -1; el.door.removeAttribute('transform'); el.doorLight.setAttribute('opacity', 0);
+  t0 = ctx.currentTime + 0.15; stepN = 0; section = 'intro';
+  if (!schedTimer) schedTimer = setInterval(() => { if (ctx && ctx.state === 'running') scheduler(); }, 25);
+  running = true; started = true; playBtn.textContent = 'Pause';
+  startSeg(0, 0);
+}
+function finish() {
+  running = false; section = 'end'; el.bubble.classList.remove('on');
+  playBtn.textContent = 'Play';
+  const saved = (() => { try { return localStorage.getItem('bvn-vote'); } catch (e) { return null; } })();
+  showEnd(saved);
+}
+function showEnd(pick) {
+  $('endOverlay').hidden = false;
+  if (pick) { $('endTitle').textContent = `You gave it to ${pick}.`; $('endText').textContent = "She's feeding them both either way. Change your mind, or run it back."; }
+  else { $('endTitle').textContent = 'Who took it?'; $('endText').textContent = "Pick your winner. She's feeding them both either way."; }
+}
+document.querySelectorAll('[data-vote]').forEach(b => b.addEventListener('click', () => {
+  const v = b.dataset.vote; try { localStorage.setItem('bvn-vote', v); } catch (e) {}
+  if (ctx) { airhorn(ctx.currentTime); crowd(ctx.currentTime); }
+  CH[v === 'Biscuit' ? 'dog' : 'cat'].cheer = 1; showEnd(v);
+}));
+$('startBtn').addEventListener('click', begin);
+$('againBtn').addEventListener('click', begin);
+$('restartBtn').addEventListener('click', begin);
+playBtn.addEventListener('click', () => {
+  if (!started || section === 'end') return begin();
+  if (running) { running = false; ctx.suspend(); if (speechOK) speechSynthesis.pause(); playBtn.textContent = 'Play'; }
+  else { ctx.resume(); if (speechOK) speechSynthesis.resume(); running = true; playBtn.textContent = 'Pause'; }
+});
+voiceBtn.addEventListener('click', () => {
+  voiceOn = !voiceOn; voiceBtn.setAttribute('aria-pressed', voiceOn); voiceBtn.textContent = 'Voices: ' + (voiceOn ? 'on' : 'off');
+  if (!voiceOn && clipSrc) { try { clipSrc.stop(); } catch (e) {} }
+  if (!voiceOn && speechOK) { speechSynthesis.cancel(); speaking = false; if (segEnd === Infinity && cur) segEnd = quant(Math.max(songT(), segStart + cur.bars * BAR)); }
+  if (ctx) setBeatGain();
+});
+$('vol').addEventListener('input', e => { vol = +e.target.value; if (ctx) setBeatGain(); });
+</script>
